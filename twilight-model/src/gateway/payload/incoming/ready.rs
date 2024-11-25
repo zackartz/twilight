@@ -1,19 +1,24 @@
 use crate::{
-    gateway::ShardId, guild::UnavailableGuild, oauth::PartialApplication, user::CurrentUser,
+    gateway::ShardId,
+    guild::{Guild, UnavailableGuild},
+    oauth::PartialApplication,
+    user::CurrentUser,
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Ready {
     pub application: PartialApplication,
-    pub guilds: Vec<UnavailableGuild>,
+    pub guilds: Vec<Guild>,
     pub resume_gateway_url: String,
     pub session_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shard: Option<ShardId>,
     pub user: CurrentUser,
     #[serde(rename = "v")]
-    pub version: u64,
+    pub version: u8,
+    #[serde(default)]
+    pub geo_ordered_rtc_regions: Vec<String>,
 }
 
 #[cfg(test)]
@@ -68,6 +73,7 @@ mod tests {
                 verified: None,
             },
             version: 8,
+            geo_ordered_rtc_regions: vec!["us-east".to_string(), "us-central".to_string()],
         };
 
         serde_test::assert_tokens(
@@ -75,7 +81,7 @@ mod tests {
             &[
                 Token::Struct {
                     name: "Ready",
-                    len: 7,
+                    len: 8,
                 },
                 Token::Str("application"),
                 Token::Struct {
@@ -145,7 +151,12 @@ mod tests {
                 Token::Str("bar"),
                 Token::StructEnd,
                 Token::Str("v"),
-                Token::U64(8),
+                Token::U8(8),
+                Token::Str("geo_ordered_rtc_regions"),
+                Token::Seq { len: Some(2) },
+                Token::Str("us-east"),
+                Token::Str("us-central"),
+                Token::SeqEnd,
                 Token::StructEnd,
             ],
         );
