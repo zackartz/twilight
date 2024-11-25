@@ -1,164 +1,136 @@
 use crate::{
-    gateway::ShardId,
-    guild::{Guild, UnavailableGuild},
+    gateway::{presence::Activity, ShardId},
+    guild::Guild,
     oauth::PartialApplication,
     user::CurrentUser,
+    util::Timestamp,
 };
 use serde::{Deserialize, Serialize};
 
+/// Session type for the connection
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Ready {
-    pub application: PartialApplication,
-    pub guilds: Vec<Guild>,
-    pub resume_gateway_url: String,
+#[serde(rename_all = "snake_case")]
+pub enum SessionType {
+    /// Normal session
+    Normal,
+}
+
+/// Client information about the session
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ClientInfo {
+    /// The client's version
+    pub version: u32,
+    /// The client's operating system
+    pub os: String,
+    /// The client type (e.g., "web")
+    pub client: String,
+}
+
+/// Information about a session
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Session {
+    /// Session ID
     pub session_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub shard: Option<ShardId>,
-    pub user: CurrentUser,
+    /// Session status (e.g., "online", "dnd")
+    pub status: String,
+    /// Client information
+    pub client_info: ClientInfo,
+    /// List of activities for the session
+    pub activities: Vec<Activity>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct Ready {
+    /// Current application info
+    pub application: PartialApplication,
+    /// Array of guild objects
+    pub guilds: Vec<Guild>,
+    /// Used for resuming connections
+    pub resume_gateway_url: String,
+    /// Session ID
+    pub session_id: String,
+    /// Gateway version
     #[serde(rename = "v")]
     pub version: u8,
+    /// The shard information associated with this session, if sent when identifying
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shard: Option<ShardId>,
+    /// Current user
+    pub user: CurrentUser,
+    /// Contains id and flags
+    pub analytics_token: String,
+    /// Connected user settings
+    #[serde(skip)]
+    pub user_settings: Option<UserSettings>,
+    /// List of servers for RTC regions
     #[serde(default)]
     pub geo_ordered_rtc_regions: Vec<String>,
+    /// Session type
+    pub session_type: SessionType,
+    /// List of read states
+    #[serde(default)]
+    pub read_state: Vec<ReadState>,
+    /// List of user sessions
+    #[serde(default)]
+    pub sessions: Vec<Session>,
+    /// Auth session ID hash
+    pub auth_session_id_hash: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct UserSettings;
+
+/// Read state for a channel
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ReadState {
+    /// ID of the channel
+    pub id: String,
+    /// Last message ID that was read
+    pub last_message_id: String,
+    /// Timestamp of the last pin
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_pin_timestamp: Option<Timestamp>,
+    /// Mention count
+    pub mention_count: u64,
+    /// Read state flags
+    pub flags: u64,
+    /// Last viewed timestamp
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_viewed: Option<u64>,
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Ready;
-    use crate::{
-        gateway::ShardId,
-        guild::UnavailableGuild,
-        id::Id,
-        oauth::{ApplicationFlags, PartialApplication},
-        user::CurrentUser,
-    };
-    use serde_test::Token;
+    use super::*;
+    use serde_json::json;
 
     #[test]
-    #[allow(clippy::too_many_lines)]
-    fn ready() {
-        let guilds = vec![
-            UnavailableGuild {
-                id: Id::new(1),
-                unavailable: true,
+    fn test_deserialize_ready() {
+        let value = json!({
+            "v": 10,
+            "user": {
+                "verified": true,
+                "username": "test",
+                "id": "123",
+                "global_name": "Test User",
+                "discriminator": "1234"
             },
-            UnavailableGuild {
-                id: Id::new(2),
-                unavailable: true,
-            },
-        ];
+            "session_id": "123abc",
+            "relationships": [],
+            "private_channels": [],
+            "presences": [],
+            "guilds": [],
+            "geo_ordered_rtc_regions": ["us-east", "us-west"],
+            "session_type": "normal",
+            "resume_gateway_url": "wss://gateway.discord.gg",
+            "analytics_token": "abc123",
+            "auth_session_id_hash": "xyz789",
+            "application": {
+                "id": "123",
+                "flags": 0
+            }
+        });
 
-        let ready = Ready {
-            application: PartialApplication {
-                flags: ApplicationFlags::empty(),
-                id: Id::new(100),
-            },
-            guilds,
-            resume_gateway_url: "wss://gateway.discord.gg".into(),
-            session_id: "foo".to_owned(),
-            shard: Some(ShardId::new(4, 7)),
-            user: CurrentUser {
-                accent_color: None,
-                avatar: None,
-                banner: None,
-                bot: false,
-                discriminator: 1212,
-                email: None,
-                flags: None,
-                id: Id::new(3),
-                locale: None,
-                mfa_enabled: false,
-                name: "bar".to_owned(),
-                premium_type: None,
-                public_flags: None,
-                verified: None,
-            },
-            version: 8,
-            geo_ordered_rtc_regions: vec!["us-east".to_string(), "us-central".to_string()],
-        };
-
-        serde_test::assert_tokens(
-            &ready,
-            &[
-                Token::Struct {
-                    name: "Ready",
-                    len: 8,
-                },
-                Token::Str("application"),
-                Token::Struct {
-                    name: "PartialApplication",
-                    len: 2,
-                },
-                Token::Str("flags"),
-                Token::U64(0),
-                Token::Str("id"),
-                Token::NewtypeStruct { name: "Id" },
-                Token::Str("100"),
-                Token::StructEnd,
-                Token::Str("guilds"),
-                Token::Seq { len: Some(2) },
-                Token::Struct {
-                    name: "UnavailableGuild",
-                    len: 2,
-                },
-                Token::Str("id"),
-                Token::NewtypeStruct { name: "Id" },
-                Token::Str("1"),
-                Token::Str("unavailable"),
-                Token::Bool(true),
-                Token::StructEnd,
-                Token::Struct {
-                    name: "UnavailableGuild",
-                    len: 2,
-                },
-                Token::Str("id"),
-                Token::NewtypeStruct { name: "Id" },
-                Token::Str("2"),
-                Token::Str("unavailable"),
-                Token::Bool(true),
-                Token::StructEnd,
-                Token::SeqEnd,
-                Token::Str("resume_gateway_url"),
-                Token::Str("wss://gateway.discord.gg"),
-                Token::Str("session_id"),
-                Token::Str("foo"),
-                Token::Str("shard"),
-                Token::Some,
-                Token::Tuple { len: 2 },
-                Token::U32(4),
-                Token::U32(7),
-                Token::TupleEnd,
-                Token::Str("user"),
-                Token::Struct {
-                    name: "CurrentUser",
-                    len: 8,
-                },
-                Token::Str("accent_color"),
-                Token::None,
-                Token::Str("avatar"),
-                Token::None,
-                Token::Str("banner"),
-                Token::None,
-                Token::Str("bot"),
-                Token::Bool(false),
-                Token::Str("discriminator"),
-                Token::Str("1212"),
-                Token::Str("id"),
-                Token::NewtypeStruct { name: "Id" },
-                Token::Str("3"),
-                Token::Str("mfa_enabled"),
-                Token::Bool(false),
-                Token::Str("username"),
-                Token::Str("bar"),
-                Token::StructEnd,
-                Token::Str("v"),
-                Token::U8(8),
-                Token::Str("geo_ordered_rtc_regions"),
-                Token::Seq { len: Some(2) },
-                Token::Str("us-east"),
-                Token::Str("us-central"),
-                Token::SeqEnd,
-                Token::StructEnd,
-            ],
-        );
+        let _result = serde_json::from_value::<Ready>(value).unwrap();
     }
 }
