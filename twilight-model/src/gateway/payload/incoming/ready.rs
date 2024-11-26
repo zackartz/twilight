@@ -1,6 +1,9 @@
 use crate::{
     gateway::{
-        presence::{Activity, Presence, PresenceIntermediary, PresenceListDeserializer},
+        presence::{
+            Activity, ClientStatus, Presence, PresenceIntermediary, PresenceListDeserializer,
+            Status,
+        },
         ShardId,
     },
     guild::Guild,
@@ -229,11 +232,6 @@ pub struct Timestamps {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ClientStatus {
-    pub web: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Role {
     pub version: i64,
     pub tags: Tags,
@@ -261,7 +259,7 @@ pub struct NotificationSettings {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DPresence {
     pub user: UserElement,
-    pub status: String,
+    pub status: Status,
     pub client_status: ClientStatus,
     pub activities: Vec<Activity>,
 }
