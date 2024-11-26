@@ -1,8 +1,11 @@
 use crate::{
-    gateway::{presence::Activity, ShardId},
+    gateway::{
+        presence::{Activity, Presence},
+        ShardId,
+    },
     guild::Guild,
     oauth::PartialApplication,
-    user::CurrentUser,
+    user::{CurrentUser, User},
     util::Timestamp,
 };
 use serde::{Deserialize, Serialize};
@@ -18,7 +21,7 @@ use serde::{Deserialize, Serialize};
 pub struct Ready {
     pub session_type: String,
     pub api_code_version: i64,
-    pub presences: Vec<DPresence>,
+    pub presences: Vec<Presence>,
     pub notification_settings: NotificationSettings,
     pub private_channels: Vec<PrivateChannel>,
     pub consents: Consents,
@@ -32,7 +35,7 @@ pub struct Ready {
     pub session_id: String,
     pub resume_gateway_url: String,
     pub experiments: Vec<Vec<i64>>,
-    pub user: DUser,
+    pub user: User,
     pub v: i64,
     pub country_code: String,
     pub friend_suggestion_count: i64,
