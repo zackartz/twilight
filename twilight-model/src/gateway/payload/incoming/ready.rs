@@ -7,16 +7,15 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Ready {
-    pub t: String,
-    pub s: i64,
-    pub op: i64,
-    pub d: D,
-}
+// #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+// pub struct Ready {
+//     pub s: i64,
+//     pub op: i64,
+//     pub d: D,
+// }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct D {
+pub struct Ready {
     pub session_type: String,
     pub api_code_version: i64,
     pub presences: Vec<DPresence>,
