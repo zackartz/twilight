@@ -40,6 +40,7 @@ pub struct Presence {
     #[serde(default)]
     pub activities: Vec<Activity>,
     pub client_status: ClientStatus,
+    pub guild_id: Id<GuildMarker>,
     pub status: Status,
     pub user: UserOrId,
 }

@@ -1,6 +1,6 @@
 use crate::{
     gateway::{
-        presence::{Activity, Presence},
+        presence::{Activity, Presence, PresenceIntermediary, PresenceListDeserializer},
         ShardId,
     },
     guild::Guild,
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 pub struct Ready {
     pub session_type: String,
     pub api_code_version: i64,
-    pub presences: Vec<Presence>,
+    pub presences: Vec<DPresence>,
     pub notification_settings: NotificationSettings,
     pub private_channels: Vec<PrivateChannel>,
     pub consents: Consents,
