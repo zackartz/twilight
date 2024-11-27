@@ -196,7 +196,6 @@ pub struct Member {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UserElement {
     pub username: String,
-    pub public_flags: i64,
     pub id: String,
     pub global_name: Option<String>,
     pub display_name: Option<String>,
