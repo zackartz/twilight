@@ -270,7 +270,6 @@ pub struct PrivateChannel {
     pub recipients: Vec<UserElement>,
     pub recipient_flags: i64,
     pub last_message_id: String,
-    pub is_message_request: bool,
     pub id: String,
     pub flags: i64,
 }
